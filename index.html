@@ -1675,7 +1675,7 @@ function gdConnectLogin(){
   var w=520,h=620,left=(screen.width-w)/2,top=(screen.height-h)/2;
   var params=[
     'client_id='+encodeURIComponent(GD.CLIENT_ID),
-    'redirect_uri='+encodeURIComponent('https://gastostc.netlify.app'),
+    'redirect_uri='+encodeURIComponent(window.location.origin+window.location.pathname.replace(/\/$/,'')),
     'response_type=token',
     'scope='+encodeURIComponent(GD.SCOPE),
     'prompt=select_account'
