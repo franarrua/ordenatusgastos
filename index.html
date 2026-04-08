@@ -1065,10 +1065,15 @@ function renderBar(){
     }).reduce(function(s,t){return s+t.monto;},0));
   });
   
+  // CA: neto = egresos - ingresos recibidos (mismo criterio que matriz y KPI)
   var dataCA=ps.map(function(p){
-    return Math.round(state.txs.filter(function(t){
+    var eg=state.txs.filter(function(t){
       return t.source==='ca'&&t.caType!=='ingreso_transfer'&&t.caType!=='ingreso_debin'&&t.mon==='ARS'&&t.per===p;
-    }).reduce(function(s,t){return s+t.monto;},0));
+    }).reduce(function(s,t){return s+t.monto;},0);
+    var ing=state.txs.filter(function(t){
+      return t.source==='ca'&&(t.caType==='ingreso_transfer'||t.caType==='ingreso_debin')&&t.per===p;
+    }).reduce(function(s,t){return s+t.monto;},0);
+    return Math.round(Math.max(0,eg-ing)); // nunca negativo en el gráfico
   });
 
   if(charts.bar)charts.bar.destroy();
@@ -1287,7 +1292,11 @@ function renderTxTable(){
     h+='<tr class="total-row"><td colspan="3" style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Total impuestos e intereses ('+cargos.length+')</td>'+(tC>0?'<td style="text-align:right;color:#f87171;">'+fARS(tC)+'</td>':'<td>—</td>')+'<td>—</td><td></td></tr>';
   }
   el('txBody').innerHTML=h||'<tr><td colspan="7" style="text-align:center;padding:24px;color:#334155;">Sin movimientos para el período seleccionado</td></tr>';
-  var allC=filtered().filter(function(t){return!t.cargo;});
+  // Pie de tabla: excluir ingresos CA del Total ARS
+  var allC=filtered().filter(function(t){
+    return !t.cargo
+      && !(t.source==='ca'&&(t.caType==='ingreso_transfer'||t.caType==='ingreso_debin'));
+  });
   var totA=allC.filter(function(t){return t.mon==='ARS';}).reduce(function(s,t){return s+t.monto;},0);
   var totU=allC.filter(function(t){return t.mon==='USD';}).reduce(function(s,t){return s+t.monto;},0);
   var totC=filtered().filter(function(t){return t.cargo&&t.mon==='ARS';}).reduce(function(s,t){return s+t.monto;},0);
